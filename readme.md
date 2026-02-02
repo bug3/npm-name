@@ -58,7 +58,7 @@ Type: `object`
 
 Default: User's configured npm registry URL.
 
-THe registry URL to check name availability against.
+The registry URL to check name availability against.
 
 **Note:** You're unlikely to need this option. Most use-cases are best solved by using the default. You should only use this option if you need to check a package name against a specific registry.
 
@@ -94,6 +94,12 @@ Multiple names to check.
 Type: `object`
 
 Same as `npmName()`.
+
+## Known limitations
+
+This package checks the npm registry to see if a name is already taken. It also detects names that differ from existing packages only by punctuation (`-`, `.`, `_`), which npm blocks at publish time. For example, `ch-alk` will be reported as unavailable because `chalk` exists.
+
+However, npm also performs additional undocumented [similarity checks](https://blog.npmjs.org/post/168978377570/new-package-moniker-rules.html) server-side that may still reject a name at publish time even if this package reports it as available. There is no public API to replicate these checks.
 
 ## Related
 
