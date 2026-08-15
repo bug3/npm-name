@@ -97,7 +97,9 @@ Same as `npmName()`.
 
 ## Known limitations
 
-This package checks the npm registry to see if a name is already taken. It also detects names that differ from existing packages only by punctuation (`-`, `.`, `_`), which npm blocks at publish time. For example, `ch-alk` will be reported as unavailable because `chalk` exists.
+This package checks the npm registry to see if a name is already taken. It also detects names that differ from existing packages only by punctuation (`-`, `.`, `_`), which npm blocks at publish time. The registry strips punctuation from both names before comparing them, so `ch-alk` is reported as unavailable because `chalk` exists, and `lodash-merge` is reported as unavailable because `lodash.merge` exists.
+
+A name with no punctuation can still conflict with an existing punctuated one, for example `lodashmerge` against `lodash.merge`. That direction cannot be enumerated from the client, as there is no way to ask the registry which existing names strip down to a given string.
 
 However, npm also performs additional undocumented [similarity checks](https://blog.npmjs.org/post/168978377570/new-package-moniker-rules.html) server-side that may still reject a name at publish time even if this package reports it as available. There is no public API to replicate these checks.
 

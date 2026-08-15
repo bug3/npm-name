@@ -32,6 +32,12 @@ test('returns false when package name is taken, regardless of punctuation', asyn
 	t.false(await npmName('ch_alk'));
 });
 
+test('returns false when the existing package is the punctuated one', async t => {
+	// `lodash.merge` exists, `lodash-merge` and `lodash_merge` do not.
+	t.false(await npmName('lodash-merge'));
+	t.false(await npmName('lodash_merge'));
+});
+
 test('returns false when organization name is taken', async t => {
 	t.false(await npmName('@ava'));
 	t.false(await npmName('@ava/'));

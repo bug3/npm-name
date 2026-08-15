@@ -18,25 +18,40 @@ const npmOrganizationUrl = 'https://registry.npmjs.org/-/org/';
 
 // Npm blocks publishing packages whose names differ from existing ones only by punctuation.
 // https://blog.npmjs.org/post/168978377570/new-package-moniker-rules.html
-const removePunctuation = name => name.replaceAll(/[-._]/g, '');
+// The registry strips punctuation from both names before comparing, so `foo-bar`
+// conflicts with `foobar`, `foo.bar` and `foo_bar` alike.
+const punctuationVariants = name => {
+	const parts = name.split(/[-._]/);
+	if (parts.length === 1) {
+		return [];
+	}
+
+	const variants = new Set(['', '-', '_', '.'].map(separator => parts.join(separator)));
+	variants.delete(name);
+	return [...variants];
+};
 
 const hasPunctuationConflict = async (name, {isOrganization, isScopedPackage, registryUrl, headers}) => {
 	if (isOrganization || isScopedPackage) {
 		return false;
 	}
 
-	const lowercaseName = name.toLowerCase();
-	const normalizedName = removePunctuation(lowercaseName);
-	if (normalizedName === lowercaseName) {
+	const variants = punctuationVariants(name.toLowerCase());
+	if (variants.length === 0) {
 		return false;
 	}
 
-	try {
-		await ky.head(registryUrl + normalizedName, {timeout: 10_000, headers});
-		return true;
-	} catch {
-		return false;
-	}
+	const exists = async variant => {
+		try {
+			await ky.head(registryUrl + variant, {timeout: 10_000, headers});
+			return true;
+		} catch {
+			return false;
+		}
+	};
+
+	const results = await pMap(variants, exists, {concurrency: variants.length});
+	return results.includes(true);
 };
 
 const request = async (name, options) => {
